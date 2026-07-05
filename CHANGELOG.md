@@ -9,6 +9,13 @@ This project uses pre-1.0 semver: **minor = breaking**, patch = compatible.
 Initial release. WS orchestrator<->runner protocol + harness-adapter ABC for
 Stapel Studio (steel thread, SN-2).
 
+### Packaging
+- Tests excluded from the built wheel/sdist (the
+  `stapel_runner_protocol.tests` subpackage is no longer listed in
+  `[tool.setuptools] packages`). Expanded `[project.urls]`, completed the
+  trove classifiers (Python 3.13, OS Independent, `3 :: Only`) and added a
+  `[tool.ruff]` lint section (single source shared with the git hooks/CI).
+
 ### Added
 - **Protocol messages** (`messages.py`) with JSON Schema v1 (`schemas/`,
   Draft 2020-12): `hello`, `task.assign`, `task.progress`, `task.report`,
