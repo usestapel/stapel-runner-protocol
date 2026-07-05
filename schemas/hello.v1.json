@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/hello.v1.json",
+  "title": "Hello v1",
+  "description": "First frame on a runner->hub connection. The connection is always outbound from the runner (the project container holds no inbound management ports, studio-design S3). Carries protocol/runner version, project identity and capabilities; on a reconnect it also declares per-task resume points (last contiguously-received seq per task) so the hub can replay/re-send anything after them. Forward-compatible envelope: unknown top-level fields are accepted.",
+  "type": "object",
+  "required": ["schema_version", "type", "protocol_version", "project_id", "runner_version"],
+  "properties": {
+    "schema_version": {"const": 1, "description": "Message schema major version."},
+    "type": {"const": "hello"},
+    "protocol_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Wire protocol major version the runner speaks."
+    },
+    "project_id": {"type": "string", "minLength": 1, "description": "Human-readable project slug, e.g. brave-falcon-1042."},
+    "runner_version": {"type": "string", "description": "Runner build/version string (opaque to the hub)."},
+    "capabilities": {
+      "type": "array",
+      "description": "Adapter/backends the runner can drive. Open strings; the routing config that consumes them is host policy, not part of this schema.",
+      "items": {"type": "string"},
+      "examples": [["agent-sdk", "subprocess"]]
+    },
+    "resume": {
+      "type": "object",
+      "description": "Reconnect declaration: task_id -> last seq the runner has contiguously received from the hub for that task. The hub replays its outbound buffer for each task with seq > this value. Absent/empty on a fresh connection.",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    }
+  }
+}

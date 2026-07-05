@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/task_progress.v1.json",
+  "title": "TaskProgress v1",
+  "description": "runner->hub: an incremental progress frame for a task. Idempotent by (task_id, seq): the hub applies each pair exactly once, so a runner may safely re-send from its last checkpoint (a git commit) after a reconnect. kind selects the payload shape; when kind is 'usage' the payload carries a taskspecs UsageSplit (validated). Forward-compatible envelope.",
+  "type": "object",
+  "required": ["schema_version", "type", "task_id", "seq", "kind", "payload"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "type": {"const": "task.progress"},
+    "task_id": {"type": "string", "minLength": 1},
+    "seq": {"type": "integer", "minimum": 0, "description": "Monotonic per-task sequence number; (task_id, seq) is the idempotency key."},
+    "kind": {
+      "type": "string",
+      "description": "Payload discriminator. Open string; common values below.",
+      "examples": ["state", "tool", "controls", "usage"]
+    },
+    "payload": {
+      "type": "object",
+      "description": "kind-specific body. For kind='usage' it contains a 'usage' object that is a taskspecs UsageSplit (five-component, validated by TaskProgress.validate())."
+    }
+  }
+}

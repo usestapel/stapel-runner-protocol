@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/pong.v1.json",
+  "title": "Pong v1",
+  "description": "Either direction: reply to a Ping, echoing its nonce. Control frame; not part of any per-task sequence.",
+  "type": "object",
+  "required": ["schema_version", "type"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "type": {"const": "pong"},
+    "nonce": {"type": ["string", "integer"], "description": "The nonce from the Ping being answered."}
+  }
+}

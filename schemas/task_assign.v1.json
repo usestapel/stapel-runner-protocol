@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/task_assign.v1.json",
+  "title": "TaskAssign v1",
+  "description": "hub->runner: assign one task to a role. The task payload is a stapel-taskspecs TaskSpec (validated by that library, not re-specified here). invocation carries the native model<->harness pairing and runtime wiring. seq places the frame in the hub's per-task outbound stream for resume/replay. Anti-cheat rules, permission policies and concrete system prompts are NOT part of this schema (moat, studio-design section 6).",
+  "type": "object",
+  "required": ["schema_version", "type", "task_id", "task", "role", "invocation", "seq"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "type": {"const": "task.assign"},
+    "task_id": {"type": "string", "minLength": 1, "description": "Convenience mirror of task.id; the (task_id, seq) pair keys resume/replay."},
+    "task": {
+      "type": "object",
+      "description": "A stapel-taskspecs TaskSpec object. Validated against the taskspecs schema by TaskAssign.validate(); kept as a generic object here to avoid a cross-package $ref.",
+      "required": ["schema_version", "id"]
+    },
+    "role": {
+      "type": "string",
+      "description": "Role the runner executes. Open string; the coder is the only role the runner runs (thin roles live in the control plane).",
+      "examples": ["coder"]
+    },
+    "invocation": {
+      "type": "object",
+      "description": "Native model<->harness pairing + runtime wiring. Fields are examples, not a closed set (routing config is host policy).",
+      "properties": {
+        "backend": {"type": "string", "examples": ["agent-sdk", "subprocess"]},
+        "model": {"type": "string"},
+        "session": {"type": "string", "examples": ["per-task", "one-shot"]},
+        "system_prompt_ref": {"type": "string"},
+        "allowed_tools": {"type": "array", "items": {"type": "string"}},
+        "llm_base_url": {"type": "string"},
+        "budget": {"type": "object"}
+      }
+    },
+    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the hub's per-task outbound stream."}
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/ping.v1.json",
+  "title": "Ping v1",
+  "description": "Either direction: liveness probe. The peer answers with a Pong echoing the nonce. Control frame; not part of any per-task sequence.",
+  "type": "object",
+  "required": ["schema_version", "type"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "type": {"const": "ping"},
+    "nonce": {"type": ["string", "integer"], "description": "Opaque token echoed back in the Pong."},
+    "sent_at": {"type": ["string", "number"], "description": "Optional send timestamp for round-trip measurement."}
+  }
+}

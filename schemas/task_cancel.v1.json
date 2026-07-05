@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/task_cancel.v1.json",
+  "title": "TaskCancel v1",
+  "description": "hub->runner: graceful cancellation of a task at an automaton boundary. seq places it in the hub's per-task outbound stream so it is replayed on reconnect if the runner had not yet applied it. reason is an open, human-readable string.",
+  "type": "object",
+  "required": ["schema_version", "type", "task_id", "reason", "seq"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "type": {"const": "task.cancel"},
+    "task_id": {"type": "string", "minLength": 1},
+    "reason": {"type": "string", "description": "Why the task is being cancelled (open string)."},
+    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the hub's per-task outbound stream."}
+  }
+}

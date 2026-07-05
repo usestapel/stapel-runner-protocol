@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stapel-runner-protocol"
+version = "0.1.0"
+description = "WS orchestrator<->runner protocol messages + harness-adapter ABC and reference adapters for Stapel Studio"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+keywords = ["stapel", "studio", "runner", "protocol", "websocket", "harness", "agents"]
+authors = [{ name = "Stapel" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+dependencies = [
+    "stapel-taskspecs>=0.1,<0.2",
+    "jsonschema>=4.18",
+]
+
+[project.optional-dependencies]
+# Thin websockets transport wrapper (transport-agnostic core needs neither).
+websockets = ["websockets>=12"]
+# Reference agent-sdk adapter (interface + extraction logic work without it).
+agent-sdk = ["claude-agent-sdk>=0.2"]
+dev = ["pytest>=8", "pytest-cov>=4", "ruff>=0.6"]
+
+[project.urls]
+Homepage = "https://stapel.dev"
+
+[tool.setuptools]
+package-dir = { "stapel_runner_protocol" = "." }
+packages = ["stapel_runner_protocol", "stapel_runner_protocol.tests"]
+
+[tool.setuptools.package-data]
+stapel_runner_protocol = ["py.typed", "schemas/*.json"]
+
+[tool.pytest.ini_options]
+addopts = "--tb=short -q --import-mode=importlib"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["*/tests/*"]

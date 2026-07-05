@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.stapel.dev/runner-protocol/task_report.v1.json",
+  "title": "TaskReport (message) v1",
+  "description": "runner->hub: the terminal frame for a task. Wraps a stapel-taskspecs TaskReport (validated by that library, including its mandatory five-component usage split) and places it in the per-task progress stream via seq. This is the message envelope; the report payload's shape is owned by stapel-taskspecs.",
+  "type": "object",
+  "required": ["schema_version", "type", "task_id", "report", "seq"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "type": {"const": "task.report"},
+    "task_id": {"type": "string", "minLength": 1},
+    "report": {
+      "type": "object",
+      "description": "A stapel-taskspecs TaskReport object (status done|blocked|failed, controls, usage, ...). Validated against the taskspecs schema by TaskReportMessage.validate().",
+      "required": ["schema_version", "task_id", "status", "usage"]
+    },
+    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the runner's per-task outbound stream (continues the progress numbering)."}
+  }
+}
