@@ -1,0 +1,81 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install (editable, dev + optional transport/adapter extras)
+        run: pip install -e ".[dev,websockets,agent-sdk]"
+
+      - name: Lint
+        run: ruff check . --select E,F,W --ignore E501
+
+      - name: Import check
+        run: python -c "import stapel_runner_protocol; print('import OK')"
+
+      - name: Tests with coverage
+        run: |
+          pytest tests/ \
+            --cov=stapel_runner_protocol \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --junitxml=junit.xml \
+            -o junit_family=legacy \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          files: coverage.xml
+          flags: stapel-runner-protocol
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  release-track:
+    # Release gate — library-standard §7.4. Installs the package the way an end
+    # user does: dependencies (incl. stapel-taskspecs) resolved from PyPI
+    # strictly by the declared pin — no editable siblings. Catches "pin into
+    # the void" and drift between the sibling's main branch and its published
+    # wheel, once that wheel exists.
+    #
+    # Advisory (library-standard §7.4-7.5), NOT blocking: stapel-taskspecs is
+    # not yet on PyPI, so `pip install .` cannot resolve it and this job is
+    # expected to fail until stapel-taskspecs is on PyPI. continue-on-error
+    # keeps this from gating publish.yml in the meantime; drop it once the
+    # sibling is published and this job goes green.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install as an end user (deps resolved from PyPI by pin)
+        run: pip install .
+      - name: Import smoke (installed package, from a clean dir)
+        run: cd "$RUNNER_TEMP" && python -c "import stapel_runner_protocol; print('release-track import OK')"
