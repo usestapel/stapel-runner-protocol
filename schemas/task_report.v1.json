@@ -14,6 +14,7 @@
       "description": "A stapel-taskspecs TaskReport object (status done|blocked|failed, controls, usage, ...). Validated against the taskspecs schema by TaskReportMessage.validate().",
       "required": ["schema_version", "task_id", "status", "usage"]
     },
-    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the runner's per-task outbound stream (continues the progress numbering)."}
+    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the runner's per-task outbound stream (continues the progress numbering)."},
+    "attempt": {"type": "integer", "minimum": 0, "description": "G-4: the attempt that emitted this frame (0 = unset/legacy), echoed from the task.assign that started the run. The hub's idempotency key is (task_id, attempt, seq), not (task_id, seq) alone — a runner recreated for a new attempt restarts its own outbound seq at 1."}
   }
 }

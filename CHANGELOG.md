@@ -4,6 +4,24 @@ All notable changes to stapel-runner-protocol are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project uses pre-1.0 semver: **minor = breaking**, patch = compatible.
 
+## [0.1.1] - 2026-07-10
+
+### Added
+- **`attempt` field** on `task.assign`, `task.progress` and `task.report`
+  (G-4). Additive, optional, defaults to `0` (unset/legacy) — existing
+  consumers are unaffected. The hub stamps the attempt number onto each
+  `task.assign`; the runner echoes it back on every `task.progress` /
+  `task.report` it emits for that run. This lets a receiver scope runner->hub
+  idempotency by `(task_id, attempt, seq)` instead of `(task_id, seq)` alone:
+  without it, a runner recreated for a new attempt restarts its own outbound
+  seq at 1, which silently collided with the PRIOR attempt's already-recorded
+  seqs and got dropped as a "duplicate" — the new attempt's report never
+  applied and the task hung until a watchdog intervened. `state.py`'s
+  `OutboxLog`/`InboxTracker` are unchanged (they were never the problem —
+  they just number frames; the collision was in how a *receiver* keys its
+  idempotency ledger, which is the receiver's own concern, not this
+  package's).
+
 ## [0.1.0] - 2026-07-06
 
 Initial release. WS orchestrator<->runner protocol + harness-adapter ABC for

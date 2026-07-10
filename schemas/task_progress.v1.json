@@ -18,6 +18,7 @@
     "payload": {
       "type": "object",
       "description": "kind-specific body. For kind='usage' it contains a 'usage' object that is a taskspecs UsageSplit (five-component, validated by TaskProgress.validate())."
-    }
+    },
+    "attempt": {"type": "integer", "minimum": 0, "description": "G-4: the attempt that emitted this frame (0 = unset/legacy), echoed from the task.assign that started the run. The hub's idempotency key is (task_id, attempt, seq), not (task_id, seq) alone — a runner recreated for a new attempt restarts its own outbound seq at 1."}
   }
 }

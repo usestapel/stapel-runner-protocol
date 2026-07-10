@@ -202,13 +202,22 @@ class Pong(_Message):
 @dataclass
 class TaskAssign(_Message):
     ARTIFACT: ClassVar[str] = "task.assign"
-    _KNOWN: ClassVar[tuple[str, ...]] = ("task_id", "task", "role", "invocation", "seq")
+    _KNOWN: ClassVar[tuple[str, ...]] = (
+        "task_id", "task", "role", "invocation", "seq", "attempt",
+    )
 
     task_id: str = ""
     task: dict[str, Any] = field(default_factory=dict)
     role: str = ""
     invocation: dict[str, Any] = field(default_factory=dict)
     seq: int = 0
+    #: G-4: the attempt this assign belongs to (0 = unset/legacy). Carried
+    #: through by the runner onto every task.progress/task.report it emits
+    #: for the run, so the hub can scope inbound idempotency per (task,
+    #: attempt, seq) instead of (task, seq) alone — a runner recreated for a
+    #: new attempt restarts its own outbound seq at 1, which would otherwise
+    #: collide with the PRIOR attempt's already-recorded seqs.
+    attempt: int = 0
     schema_version: int = 1
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -221,6 +230,7 @@ class TaskAssign(_Message):
             role=data.get("role", ""),
             invocation=data.get("invocation", {}) or {},
             seq=data.get("seq", 0),
+            attempt=data.get("attempt", 0),
             schema_version=data.get("schema_version", 1),
             extra=_split_extra(data, cls._KNOWN),
         )
@@ -234,6 +244,7 @@ class TaskAssign(_Message):
             "role": self.role,
             "invocation": self.invocation,
             "seq": self.seq,
+            "attempt": self.attempt,
         }
         return {**_prune(out), **self.extra}
 
@@ -289,12 +300,15 @@ class TaskCancel(_Message):
 @dataclass
 class TaskProgress(_Message):
     ARTIFACT: ClassVar[str] = "task.progress"
-    _KNOWN: ClassVar[tuple[str, ...]] = ("task_id", "seq", "kind", "payload")
+    _KNOWN: ClassVar[tuple[str, ...]] = ("task_id", "seq", "kind", "payload", "attempt")
 
     task_id: str = ""
     seq: int = 0
     kind: str = ""
     payload: dict[str, Any] = field(default_factory=dict)
+    #: G-4: the attempt that emitted this frame (0 = unset/legacy) — see
+    #: :attr:`TaskAssign.attempt`.
+    attempt: int = 0
     schema_version: int = 1
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -305,6 +319,7 @@ class TaskProgress(_Message):
             seq=data.get("seq", 0),
             kind=data.get("kind", ""),
             payload=data.get("payload", {}) or {},
+            attempt=data.get("attempt", 0),
             schema_version=data.get("schema_version", 1),
             extra=_split_extra(data, cls._KNOWN),
         )
@@ -317,6 +332,7 @@ class TaskProgress(_Message):
             "seq": self.seq,
             "kind": self.kind,
             "payload": self.payload,
+            "attempt": self.attempt,
         }
         # payload is required by schema even when empty; keep it verbatim.
         pruned = _prune({k: v for k, v in out.items() if k != "payload"})
@@ -334,11 +350,14 @@ class TaskProgress(_Message):
 @dataclass
 class TaskReportMessage(_Message):
     ARTIFACT: ClassVar[str] = "task.report"
-    _KNOWN: ClassVar[tuple[str, ...]] = ("task_id", "report", "seq")
+    _KNOWN: ClassVar[tuple[str, ...]] = ("task_id", "report", "seq", "attempt")
 
     task_id: str = ""
     report: dict[str, Any] = field(default_factory=dict)
     seq: int = 0
+    #: G-4: the attempt that emitted this frame (0 = unset/legacy) — see
+    #: :attr:`TaskAssign.attempt`.
+    attempt: int = 0
     schema_version: int = 1
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -349,6 +368,7 @@ class TaskReportMessage(_Message):
             task_id=data.get("task_id") or report.get("task_id", ""),
             report=report,
             seq=data.get("seq", 0),
+            attempt=data.get("attempt", 0),
             schema_version=data.get("schema_version", 1),
             extra=_split_extra(data, cls._KNOWN),
         )
@@ -360,6 +380,7 @@ class TaskReportMessage(_Message):
             "task_id": self.task_id,
             "report": self.report,
             "seq": self.seq,
+            "attempt": self.attempt,
         }
         return {**_prune(out), **self.extra}
 

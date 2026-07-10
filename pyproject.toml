@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stapel-runner-protocol"
-version = "0.1.0"
+version = "0.1.1"
 description = "WS orchestrator<->runner protocol messages + harness-adapter ABC and reference adapters for Stapel Studio"
 readme = "README.md"
 license = { text = "MIT" }

@@ -32,6 +32,7 @@
         "budget": {"type": "object"}
       }
     },
-    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the hub's per-task outbound stream."}
+    "seq": {"type": "integer", "minimum": 0, "description": "Sequence number in the hub's per-task outbound stream."},
+    "attempt": {"type": "integer", "minimum": 0, "description": "G-4: the attempt this assign belongs to (0 = unset/legacy). The runner echoes it on every task.progress/task.report it emits for the run, so the hub can scope runner->hub idempotency by (task_id, attempt, seq) instead of (task_id, seq) alone."}
   }
 }
